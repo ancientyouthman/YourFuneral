@@ -1,0 +1,126 @@
+*{
+	margin: 0;
+	padding:0;
+}
+html{
+	/*background-color:black;*/
+}
+.wrapper{
+	width:200px;
+	margin: 0 auto;
+}
+
+.directional{
+    height:80%;
+    display:table-cell;
+    vertical-align:middle;
+    text-align:center;
+	font-size:8vw;
+	color:#ff0000;
+	opacity:0.6;
+    padding:0;
+   
+}
+
+
+.directional:hover{
+	opacity:1;
+}
+
+.wrapper{
+	height:400px;
+	width:100%;
+	margin-left:auto;
+	margin-right:auto;
+	display:block;
+}
+
+.grid-row{
+	display:block;
+	/*width:100%;*/
+}
+
+.grid-square{
+	border: 1px solid black;
+	height:60px;
+	width:20%;
+	float:left;
+	display:table;
+}
+.grid-square img{
+	height:80%;
+	width:80%;
+}
+.console{
+	max-height:100px;
+	width:100%;
+	background-color:black;
+	font-size:4vw;
+	color:white;
+    overflow-y:scroll;
+}
+
+.wall{
+	background-image:url('../img/wall.png');
+}
+.ceiling{
+	background-color:black;
+}
+
+.floor{
+	background-image:url('../img/floor.png');
+}
+
+.map-modal-content br{
+	line-height:0px;
+}
+
+/* HP Bar */
+
+
+.hp-outer{
+border: 12px solid transparent;
+width:200px;
+height:30px;
+background-color:black;
+z-index:0;
+    -webkit-border-image: url(../img/border.png) 5 5 stretch; /* Safari 3.1-5 */
+    -o-border-image: url(../img/border.png) 5 5 stretch; /* Opera 11-12.1 */
+    border-image: url(../img/border.png) 5 5 stretch;
+	margin-top:100px;
+}
+
+.hp-inner{
+width:100%;
+background-color:green;
+height:100%;
+z-index:1;
+transition:300ms linear;
+
+}
+
+
+.hp-wrapper{
+left:0;
+position:absolute;
+top:55%;
+padding-left:20px;
+z-index:100;
+height:20px;
+}
+.hp-wrapper p{
+	font-size: 1.4em; 
+font-family: 'VT323';
+text-align:center;
+}
+
+
+.monster{
+    cursor: pointer; /* for iOS binding jquery click events */
+}
+
+.map-modal-body{
+    max-width:300px;
+    max-height:300px;
+    overflow: scroll;
+}

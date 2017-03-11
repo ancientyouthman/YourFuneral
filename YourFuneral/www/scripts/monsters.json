@@ -1,0 +1,26 @@
+﻿[
+  {
+    "type": "Goblin",
+    "atkModifier": 0.9,
+    "defModifier": 0.5,
+    "hpModifier": 2.5,
+    "spdModifier": 0.4,
+    "aglModifier": 0.4,
+    "critChance": 0.15,
+    "encounterCeiling": 7,
+    "image": "<img src=\"img/orc_attack2.gif\" />",
+    "heldItemIds": [ 1, 2 ]
+  },
+  {
+    "type": "Skeleton",
+    "atkModifier": 0.3,
+    "defModifier": 1.6,
+    "hpModifier": 5,
+    "spdModifier": 1.2,
+    "aglModifier": 0.9,
+    "critChance": 0.15,
+    "encounterCeiling": 8,
+    "image": "<img src=\"img/skeleton.png\" />",
+    "heldItemIds": [ 1, 2 ]
+  }
+]
