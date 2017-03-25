@@ -1,0 +1,62 @@
+﻿var itemsRepository = [
+  {
+      "type": "Useable",
+      "name": "Key",
+      "value": 0,
+      "rarity": 0.9,
+      "encounterCeiling": 100000000,
+      "priceFloor": 3,
+      "priceCeil": 6,
+  },
+    {
+      "type": "Useable",
+      "name": "Torch",
+      "value": 0,
+      "rarity": 0.9,
+      "encounterCeiling": 100000000,
+      "priceFloor": 3,
+      "priceCeil": 6,
+      },
+  {
+      "type": "Useable",
+      "name": "Potion",
+      "value": 10,
+      "modifiers": [{
+          "stat": "HP",
+          "amountPercentage": 0.2
+      }],
+      "encounterCeiling": 7,
+      "rarity": 0.7,
+      "priceFloor": 6,
+      "priceCeil": 10,
+  },
+  {
+      "type": "Treasure",
+      "name": "Bronze ring",
+      "value": 35,
+      "encounterCeiling": 7,
+      "rarity": 0.2,
+      "priceFloor": 40,
+      "priceCeil": 60,
+  },
+  {
+      "type": "Treasure",
+      "name": "Tiny amulet",
+      "value": 55,
+      "encounterCeiling": 7,
+      "rarity": 0.1,
+      "priceFloor": 70,
+      "priceCeil": 80,
+  },
+  {
+      "type": "Food",
+      "name": "Potato",
+      "value": 1,
+      "encounterCeiling": 10,
+      "rarity": 0.6,
+      "perishable": true,
+      "nutrition": 1,
+      "priceFloor": 1,
+      "priceCeil": 2,
+  }
+];

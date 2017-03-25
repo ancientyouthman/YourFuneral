@@ -7,7 +7,12 @@
     -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *">
     <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/rpgui.css">
+
     <script src="scripts/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+    <script src="scripts/classes.js" type="text/javascript"></script>
+    <script src="scripts/monsters.js" type="text/javascript"></script>
+    <script src="scripts/items.js" type="text/javascript"></script>
 
     <script src="scripts/app.js" type="text/javascript"></script>
 
@@ -74,41 +79,48 @@
                     <div class="grid-square ceiling"></div>
                     <div class="grid-square ceiling"></div>
                 </div>
-
-                <div class="">
-                    <div class="console" />
-                </div>
-
-
             </div>
-            <span class="show-map" data-toggle="modal" data-target="#map-modal">Show map</span>
-            <span class="show-stats" data-toggle="modal" data-target="#stats-modal">Show player details</span>
-            <span class="show-inventory" data-toggle="modal" data-target="#inventory-modal">Show inventory</span>
+            <div class="">
+                <div class="console framed" />
+            </div>
 
         </div>
+        <div class="framed hud">
+            <div class="hp-wrapper">
+                <div class="hp-outer">
+                    <div class="hp-inner" id="HP">
 
-        <div class="hp-wrapper">
-            <div class="hp-outer">
-                <div class="hp-inner" id="HP">
-
+                    </div>
                 </div>
-            </div>
-            <p>
-                HP: <span id="hp-amount">100</span>
-            </p>
+                <span>
+                    HP: <span id="hp-amount">100</span>
+                </span>
 
-            <p>
-                Money: <span id="money-amount">0</span>
-            </p>
+                <span>
+                    Money: <span id="money-amount">0</span>
+                </span>
+                <span>
+                    Hunger: <span id="hunger">0</span>
+                </span>
+            </div>
         </div>
+        <div class="framed">
+
+            <span class="show-map" data-toggle="modal" data-target="#map-modal">Map</span>
+            |
+            <span class="show-stats" data-toggle="modal" data-target="#stats-modal">Stats</span>
+            |
+            <span class="show-inventory" data-toggle="modal" data-target="#inventory-modal">Inventory</span>
+        </div>
+    </div>
 
         <div class="modal fade" id="map-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
-                <div class="modal-content">
+                <div class="modal-content framed">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Map</h5>
+                        <h4 class="modal-title" id="exampleModalLabel">Map</h4>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+                            <span aria-hidden="true">X</span>
                         </button>
                     </div>
                     <div class="map-modal-body">
@@ -120,11 +132,11 @@
         </div>
         <div class="modal fade" id="stats-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
-                <div class="modal-content">
+                <div class="modal-content framed">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Stats</h5>
+                        <h4 class="modal-title" id="exampleModalLabel">Stats</h4>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+                            <span aria-hidden="true">X</span>
                         </button>
                     </div>
                     <div class="stats-modal-body">
@@ -136,102 +148,119 @@
         </div>
         <div class="modal fade" id="inventory-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
-                <div class="modal-content">
+                <div class="modal-content framed">
                     <div class="modal-header">
                         <h5 class="modal-title" id="exampleModalLabel">Inventory</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+                            <span aria-hidden="true">X</span>
                         </button>
                     </div>
                     <div class="inventory-modal-body">
 
 
-                    <div class="panel-group" id="accordion">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title">
-                                    <a data-toggle="collapse" data-parent="#accordion" href="#Useables">Useables</a>
-                                </h4>
-                            </div>
-                            <div id="Useables" class="panel-collapse collapse in">
-                                <div class="panel-body">
-                                    <ul class="useables-list"></ul>
+                        <div class="panel-group " id="accordion">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <a data-toggle="collapse" data-parent="#accordion" href="#Useables">Useables</a>
+                                    </h4>
+                                </div>
+                                <div id="Useables" class="panel-collapse collapse in">
+                                    <div class="panel-body">
+                                        <ul class="inventory-list useables-list"></ul>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title">
-                                    <a data-toggle="collapse" data-parent="#accordion" href="#Treasures">Treasures</a>
-                                </h4>
-                            </div>
-                            <div id="Treasures" class="panel-collapse collapse">
-                                <div class="panel-body">
-                                    <ul class="treasures-list"></ul>
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <a data-toggle="collapse" data-parent="#accordion" href="#Treasures">Treasures</a>
+                                    </h4>
+                                </div>
+                                <div id="Treasures" class="panel-collapse collapse">
+                                    <div class="panel-body">
+                                        <ul class="inventory-list treasures-list"></ul>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title">
-                                    <a data-toggle="collapse" data-parent="#accordion" href="#Weapons">Weapons</a>
-                                </h4>
-                            </div>
-                            <div id="Weapons" class="panel-collapse collapse">
-                                <div class="panel-body">
-                                    <ul class="weapons-list"></ul>
-
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <a data-toggle="collapse" data-parent="#accordion" href="#Weapons">Weapons</a>
+                                    </h4>
                                 </div>
-                            </div>
+                                <div id="Weapons" class="panel-collapse collapse">
+                                    <div class="panel-body">
+                                        <ul class="inventory-list weapons-list"></ul>
 
-                        </div>
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title">
-                                    <a data-toggle="collapse" data-parent="#accordion" href="#Food">Food</a>
-                                </h4>
-                            </div>
-                            <div id="Food" class="panel-collapse collapse">
-                                <div class="panel-body">
-                                    <ul class="food-list"></ul>
-
+                                    </div>
                                 </div>
-                            </div>
 
+                            </div>
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <a data-toggle="collapse" data-parent="#accordion" href="#Food">Food</a>
+                                    </h4>
+                                </div>
+                                <div id="Food" class="panel-collapse collapse">
+                                    <div class="panel-body">
+                                        <ul class="inventory-list food-list"></ul>
+
+                                    </div>
+                                </div>
+
+                            </div>
                         </div>
+
+
                     </div>
 
-
                 </div>
-
             </div>
         </div>
-    </div>
 
-    <div class="modal fade" id="monster-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
+        <div class="modal fade" id="monster-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog " role="document">
+                <div class="modal-content framed">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Monster</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">X</span>
+                        </button>
+                    </div>
+                    <div class="monster-modal-body modal-body">
+                        ID: <span class="monster-info-id"></span> <br />
+                        Name: <span class="monster-info-name"></span> <br />
+                        Type: <span class="monster-info-type" /></span> <br />
+                        HP: <span class="monster-info-hp" /></span> <br />
+                        Atk: <span class="monster-info-atk" /></span> <br />
+                        Def: <span class="monster-info-def" /></span> <br />
+                        <span class="monster-info-prediction" /></span> <br />
+                    </div>
+                    <button type="button" class="btn rpgui-button.golden fight-monster">Fight</button>
+                    <div class="battle-console">
+                    </div>
+                </div>
+            </div>
+        </div>
+    <div class="modal fade" id="npc-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog " role="document">
+            <div class="modal-content framed">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Monster</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">NPC</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
+                        <span aria-hidden="true">X</span>
                     </button>
                 </div>
-                <div class="monster-modal-body modal-body">
-                    ID: <span class="monster-info-id"></span> <br />
-                    Name: <span class="monster-info-name"></span> <br />
-                    Type: <span class="monster-info-type" /></span> <br />
-                    HP: <span class="monster-info-hp" /></span> <br />
-                    Atk: <span class="monster-info-atk" /></span> <br />
-                    Def: <span class="monster-info-def" /></span> <br />
-                    <span class="monster-info-prediction" /></span> <br />
+                <div class="npc-modal-body modal-body">
+
                 </div>
-                <button type="button" class="btn fight-monster">Fight</button>
+                <button type="button" class="btn rpgui-button.golden fight-monster">Fight</button>
                 <div class="battle-console">
                 </div>
             </div>
         </div>
-    </div>
     </div>
     <script type="text/javascript" src="cordova.js"></script>
     <script type="text/javascript" src="scripts/platformOverrides.js"></script>

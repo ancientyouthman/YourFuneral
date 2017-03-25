@@ -1,4 +1,4 @@
-﻿[
+﻿var monstersRepository = [
   {
     "type": "Goblin",
     "atkModifier": 0.9,
@@ -9,7 +9,8 @@
     "critChance": 0.15,
     "encounterCeiling": 7,
     "image": "<img src=\"img/orc_attack2.gif\" />",
-    "heldItemIds": [ 1, 2 ]
+    "heldItemChance": 0.4,
+    "heldItemIds": [1, 2]
   },
   {
     "type": "Skeleton",
@@ -17,10 +18,11 @@
     "defModifier": 1.6,
     "hpModifier": 5,
     "spdModifier": 1.2,
+        "heldItemChance": 0.2,
     "aglModifier": 0.9,
     "critChance": 0.15,
     "encounterCeiling": 8,
     "image": "<img src=\"img/skeleton.png\" />",
-    "heldItemIds": [ 1, 2 ]
+    "heldItemIds": [1, 2]
   }
-]
+];

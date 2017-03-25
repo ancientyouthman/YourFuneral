@@ -17,168 +17,134 @@ var gameConsole = {
 
 
 
-// classes
+function generateMonster(gs) {
 
-function GameState(player, rooms, latestId) {
-    this.player = player;
-    this.rooms = rooms;
-    this.latestId = latestId;
-    this.findRoomAtCoords = function (x, y) {
-        for (i = 0; i < this.rooms.length; i++) {
-            if (this.rooms[i].xPos == x && this.rooms[i].yPos == y) return rooms[i];
-        }
+    var monster = new Monster();
+    var results = $.grep(monstersRepository, function (n, i) {
+        return (n.encounterCeiling >= gs.player.level);
+    });
+    console.log(results);
+    var monsterTemplate = results[Math.floor(Math.random() * results.length)];
+    console.log(monsterTemplate);
+    monster.id = gameState.incrementId();
+    monster.type = monsterTemplate.type;
+    monster.name = generateName(getRandomArbitrary(3, 7));
+    monster.pos = getRandomArbitrary(1, 10);
+    monster.HP = Math.ceil(gs.player.level * monsterTemplate.hpModifier);
+    monster.atk = Math.ceil(gs.player.level * monsterTemplate.atkModifier);
+    monster.def = Math.ceil(gs.player.level * monsterTemplate.defModifier);
+    monster.speed = Math.ceil(gs.player.level * monsterTemplate.spdModifier);
+    monster.agility = Math.ceil(gs.player.level * monsterTemplate.aglModifier);
+    monster.critChance = monsterTemplate.critChance;
+    monster.image = monsterTemplate.image;
+    // roll for held item
+    if ((getRandomArbitrary(0, 100) / 100) < monsterTemplate.heldItemChance) {
+        monster.heldItem = generateItem(gs);
     }
-    this.getRoomById = function (id) {
-        for (i = 0; i < this.rooms.length; i++) {
-            if (this.rooms[i].roomId == id) return rooms[i];
+    monster.bounty = 6;
+    monster.dead = false;
+    return monster;
 
-        }
+
+}
+
+function generateItem(gs) {
+    var item = new Item();
+    // roll to see how rare an item we get 
+    var chance = getRandomArbitrary(1, 10) / 10;
+    var results = $.grep(itemsRepository, function (n, i) {
+        return (n.encounterCeiling >= gs.player.level && n.rarity > chance);
+    });
+    console.log(results);
+    var itemTemplate = results[Math.floor(Math.random() * results.length)];
+    var item;
+    // if no item could be generated given current game state and roll, just generate money
+    if (!itemTemplate) {
+        var moneyPot = new MoneyPot();
+        moneyPot.id = gameState.incrementId();
+        moneyPot.name = "Money Pot";
+        moneyPot.pos = getRandomArbitrary(1, 10);
+        moneyPot.image = '<img src="img/b71bb760bc6f235.png" />';
+        moneyPot.taken = false;
+        moneyPot.bonanza = Math.ceil((chance * gs.player.level) * (getRandomArbitrary(1, gs.player.level)));
+        return moneyPot;
     }
-    this.incrementId = function () {
-        this.latestId += 1;
-        return this.latestId;
+    switch (itemTemplate.type) {
+        case "Useable":
+            item = new UseableItem();
+            item.modifiers = itemTemplate.modifiers;
+            break;
+        case "Food":
+            item = new Food();
+            item.modifiers = itemTemplate.modifiers;
+            item.perishable = itemTemplate.perishable;
+            item.nutrition = itemTemplate.nutrition;
+            item.rotten = false;
+            break;
+        default:
+            item = new Item();
+            break;
     }
+    // generic properties 
+    item.id = gameState.incrementId();
+    item.name = itemTemplate.name;
+    item.pos = getRandomArbitrary(1, 10);
+    item.value = itemTemplate.value;
+    item.image = '<img src="img/b71bb760bc6f235.png" />';
+    item.type = itemTemplate.type;
+    item.taken = false;
+    item.used = false;
+    item.price = getRandomArbitrary(itemTemplate.priceFloor, itemTemplate.priceCeil);
+    // properties of derived types 
+
+
+
+    return item;
+
 }
 
-function Coordinates(x, y, toOutput) {
-    this.x = x;
-    this.y = y;
-    this.output = function () {
-        return 'Position: X: ' + this.x + ' Y: ' + this.y;
-    }
-}
-
-function Player(HP, maxHP, level, atk, def, speed, critChance, luck, agile, hunger, items, money, position) {
-    this.HP = HP;
-    this.maxHP = maxHP;
-    this.level = level;
-    this.atk = atk;
-    this.def = def;
-    this.speed = speed;
-    this.critChance = critChance;
-    this.luck = luck;
-    this.agile = agile;
-    this.hunger = hunger;
-    this.items = items;
-    this.money = money;
-    this.position = position;
-    this.hasKey = function () {
-        for (i = 0; i < this.items.length; i++) {
-            if (this.items[i].name == 'Key') {
-                if (!this.items[i].used) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    };
-    this.useKey = function () {
-        for (i = 0; i < this.items.length; i++) {
-            if (this.items[i].name == 'Key') {
-                if (!this.items[i].used) {
-                    this.items[i].used = true;
-                    return;
-                }
-            }
-        };
-    }
-}
-
-function Room(roomId, xPos, yPos, items, monsters, npcs, isLocked) {
-    this.roomId = roomId;
-    this.xPos = xPos;
-    this.yPos = yPos;
-    this.items = items;
-    this.monsters = monsters;
-    this.npcs = npcs;
-    this.isLocked = isLocked;
-    this.getMonsterById = function (id) {
-        for (i = 0; i < this.monsters.length; i++) {
-            if (this.monsters[i].id == id) return this.monsters[i];
-        }
-    };
-    this.getItemById = function (id) {
-        for (i = 0; i < this.items.length; i++) {
-            if (this.items[i].id == id) return this.items[i];
-        }
-    };
-}
-
-function Item(pos, name, value, image, type, taken, used) {
-    GameObject.apply(this, arguments);
-    this.pos = pos;
-    this.name = name;
-    this.value = value;
-    this.image = image;
-    this.type = type;
-    this.taken = taken;
-    this.used = used;
-}
-
-function Monster(pos, name, HP, atk, def, speed, agility, critChance, image, type, dead, bounty) {
-    GameObject.apply(this, arguments);
-    this.pos = pos;
-    this.name = name;
-    this.HP = HP;
-    this.atk = atk;
-    this.def = def;
-    this.speed = speed;
-    this.agility = agility;
-    this.critChance = critChance;
-    this.image = image;
-    this.type = type;
-    this.dead = dead;
-    this.bounty = bounty;
-    this.xpReward = function () {
-        return Math.ceil((this.HP + this.atk + this.def) * 1.4);
-    }
-}
-
-
-function GameObject(id) {
-    this.id = id;
-}
-
-function generateMonster(gs, fn) {
-    $.getJSON("scripts/monsters.json", function (json) {
-        var monster = new Monster();
-        console.log(json);
-        var results = $.grep(json, function (n, i) {
+function generateItems(gs, amt) {
+    var items = [];
+    // this is for making an array of items, for example to set as a merchant's stock 
+    for (var i = 0; i < amt; i++) {
+        var itemAlreadyAdded = false;
+        var tryAgain = true;
+        var item = new Item();
+        var results = $.grep(itemsRepository, function (n, i) {
             return (n.encounterCeiling >= gs.player.level);
         });
-        console.log(results);
-        var monsterTemplate = results[Math.floor(Math.random() * results.length)];
-        console.log(monsterTemplate);
-        monster.id = gameState.incrementId();
-        monster.type = monsterTemplate.type;
-        monster.name = generateName(getRandomArbitrary(3, 7));
-        monster.pos = getRandomArbitrary(1, 10);
-        monster.HP = Math.ceil(gs.player.level * monsterTemplate.hpModifier);
-        monster.atk = Math.ceil(gs.player.level * monsterTemplate.atkModifier);
-        monster.def = Math.ceil(gs.player.level * monsterTemplate.defModifier);
-        monster.speed = Math.ceil(gs.player.level * monsterTemplate.spdModifier);
-        monster.agility = Math.ceil(gs.player.level * monsterTemplate.aglModifier);
-        monster.critChance = monsterTemplate.critChance;
-        monster.image = monsterTemplate.image;
-        monster.bounty = 6;
-        monster.dead = false;
-        fn(monster);
-    });
 
-}
 
-function generateItem(gs, fn) {
-    $.getJSON("scripts/items.json", function (json) {
-        var item = new Item();
-        console.log(json);
-        // roll to see how rare an item we get 
-        var chance =  getRandomArbitrary(1, 10) / 10; 
-        var results = $.grep(json, function (n, i) {
-            return (n.encounterCeiling >= gs.player.level && n.rarity > chance);
-        });
-        console.log(results);
-        var itemTemplate = results[Math.floor(Math.random() * results.length)];
-        var item = new Item();
+            tryAgain = false;
+            var itemTemplate = results[Math.floor(Math.random() * results.length)];
+            // if no item could be generated given current game state and roll, just generate money
+
+            itemAlreadyAdded = $.grep(items, function (n, i) {
+                return (n.name == itemTemplate.name);
+            });
+
+            if (!itemTemplate || itemAlreadyAdded) {
+                continue;
+            }
+  
+
+        switch (itemTemplate.type) {
+            case "Useable":
+                item = new UseableItem();
+                item.modifiers = itemTemplate.modifiers;
+                break;
+            case "Food":
+                item = new Food();
+                item.modifiers = itemTemplate.modifiers;
+                item.perishable = itemTemplate.perishable;
+                item.nutrition = itemTemplate.nutrition;
+                item.rotten = false;
+                break;
+            default:
+                item = new Item();
+                break;
+        }
+        // generic properties 
         item.id = gameState.incrementId();
         item.name = itemTemplate.name;
         item.pos = getRandomArbitrary(1, 10);
@@ -186,9 +152,38 @@ function generateItem(gs, fn) {
         item.image = '<img src="img/b71bb760bc6f235.png" />';
         item.type = itemTemplate.type;
         item.taken = false;
+        item.used = false;
+        item.price = getRandomArbitrary(itemTemplate.priceFloor, itemTemplate.priceCeil);
+        // properties of derived types 
 
-        fn(item);
-    });
+
+
+        items.push(item);
+
+    }
+
+    return items;
+
+}
+
+function generateNPC(gs) {
+
+    var npc = new Merchant();
+    npc.id = gameState.incrementId();
+    npc.pos = getRandomArbitrary(1, 10);
+    npc.meanness = getRandomArbitrary(8, 12) / 10;
+    npc.name = 'Merchant';
+    npc.image = '<img src="img/merchant.png" />';
+
+    // roll for number of items on sale 
+    var itemsStocked = getRandomArbitrary(2, 6);
+    npc.items = generateItems(gs, itemsStocked);
+
+
+
+
+    return npc;
+
 
 }
 
@@ -206,20 +201,14 @@ function generateRoom(x, y) {
     var npcCount = getRandomArbitrary(0, 8) == 5 ? getRandomArbitrary(1, 2) : 0;
 
     for (var i = 0; i < monsterCount; i++) {
-        generateMonster(gameState, function (monster) {
-            monsters.push(monster);
-        });  
+        monsters.push(generateMonster(gameState));
     }
 
     for (i = 0; i < itemCount; i++) {
-        generateItem(gameState, function (item) {
-            items.push(item);
-        });
+        items.push(generateItem(gameState));
     }
     for (i = 0; i < npcCount; i++) {
-        npcs.push({
-            name: "merchant"
-        });
+        npcs.push(generateNPC(gameState));
     }
 
     var keysAvailable = false;
@@ -239,7 +228,24 @@ function generateRoom(x, y) {
         }
     }
 
-    return new Room(gameState.incrementId(), x, y, items, monsters, npcs, locked)
+    var torchesAvailable = false;
+    var dark = false;
+    for (i = 0; i < gameState.rooms.length; i++) {
+        for (j = 0; j < gameState.rooms[i].items.length; j++) {
+            if (gameState.rooms[i].items[j].name == 'Torch') {
+                torchesAvailable = true;
+                break;
+            }
+        }
+    }
+    if (torchesAvailable) {
+        // roll to see if room is dark
+        if (getRandomArbitrary(1, 3) == 2 && gameState.rooms.length > 1) {
+            dark = true;
+        }
+    }
+
+    return new Room(gameState.incrementId(), x, y, items, monsters, npcs, locked, dark)
 
 }
 
@@ -256,6 +262,41 @@ function getMonsterById(id) {
 
 }
 
+function getQuantities(arr) {
+    var prev = {};
+    prev.name = '';
+    var ret = arr;
+    var counter = 1;
+    // sort alphabetically by name
+    ret.sort(function (a, b) {
+        var textA = a.name.toUpperCase();
+        var textB = b.name.toUpperCase();
+        return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+    });
+
+    for (var i = 0; i < ret.length; i++) {
+        ret[i].occurence = 0;
+        ret[i].visible = true;
+    }
+
+    for (var i = 0; i < ret.length; i++) {
+        ret[i].occurence = 1;
+        if (ret[i].used == false) {
+            if (ret[i].name == prev.name) {
+                ret[i - 1].visible = false;
+                counter++
+            }
+            else {
+                counter = 1;
+            }
+            ret[i].occurence = counter;
+            prev = ret[i];
+        }
+    }
+
+    return ret;
+}
+
 function fightMonster(roomId, monsterId) {
     //	debugger;
     $('#monster-modal').modal('hide')
@@ -266,7 +307,7 @@ function fightMonster(roomId, monsterId) {
         // start combat
         var dmg = 0;
         // see who strikes first
-        if (player.speed > monster.speed) {
+        if (gameState.player.speed > monster.speed) {
             gameConsole.log(monster.type + ' ' + monster.name + ' attacked you first!');
             gameState.player.HP -= Math.ceil(monster.atk - (gameState.player.def * 0.5));
         }
@@ -276,18 +317,21 @@ function fightMonster(roomId, monsterId) {
         }
         // slug it out 
         while (monster.HP > 0 && gameState.player.HP > 0) {
+            var delay = 300;
+            //      setInterval(function () {
             // player hit
             // check for crit
             var foeCrit = monster.critChance >= (getRandomArbitrary(1, 10) / 10)
             dmg = Math.ceil(monster.atk - (gameState.player.def * 0.5)) + getRandomArbitrary(monster.atk - Math.ceil(monster.atk * 0.5), monster.atk + Math.ceil(monster.atk * 0.5));
-            if(foeCrit) {
+            if (foeCrit) {
                 dmg = Math.ceil(dmg * 1.5);
                 gameConsole.log('Critical hit!');
             }
             gameConsole.log(monster.type + ' ' + monster.name + ' hit you for ' + dmg);
             gameState.player.HP -= dmg;
+            if (gameState.player.HP <= 0) gameOver();
             setHP(gameState.player.HP);
-                // foe hit 
+            // foe hit 
             var playerCrit = player.critChance >= (getRandomArbitrary(1, 10) / 10)
             dmg = Math.ceil(gameState.player.atk - (monster.def * 0.5)) + getRandomArbitrary(gameState.player.atk - Math.ceil(gameState.player.atk * 0.5), gameState.player.atk + Math.ceil(gameState.player.atk * 0.5));
             if (playerCrit) {
@@ -296,12 +340,21 @@ function fightMonster(roomId, monsterId) {
             }
             gameConsole.log('You struck the ' + monster.type + ' for ' + dmg);
             monster.HP -= dmg;
+            //  }, delay);
         }
+
         monster.dead = true;
         gameConsole.log('You killed the ' + monster.type);
         gameConsole.log('Gained $: ' + monster.bounty);
         gameConsole.log('Gained XP: ' + monster.xpReward());
+        if (monster.heldItem) {
+            gameConsole.log('The monster dropped a ' + monster.heldItem.name);
+            gameState.player.items.push(monster.heldItem);
+            gameConsole.log('Got the ' + monster.heldItem.name);
 
+        }
+        gameState.player.money += monster.bounty;
+        setMoney(gameState.player.money);
         invalidate(room);
     }
 
@@ -347,30 +400,37 @@ function fightPrediction(roomId, monsterId) {
 }
 
 function renderInventory(items) {
-    var useables = $.grep(items, function (n, i) {
-        return (n.type == 'Useable');
-    });
-    var treasures = $.grep(items, function (n, i) {
-        return (n.type == 'Treasure');
-    });
-    var weapons = $.grep(items, function (n, i) {
-        return (n.type == 'Weapon');
-    });
-    var food = $.grep(items, function (n, i) {
-        return (n.type == 'Food');
-    });
-    $('.useables-list').html('<ul></ul>');
-    for (i = 0; i < useables.length; i++) {
-        $('.useables-list').append('<li>' + useables[i].name + '</li>')
-    }
-    for (i = 0; i < treasures.length; i++) {
-        $('.treasures-list').append('<li>' + treasures[i].name + '</li>')
-    }
-    for (i = 0; i < weapons.length; i++) {
-        $('.weapons-list').append('<li>' + weapons[i].name + '</li>')
-    }
-    for (i = 0; i < food.length; i++) {
-        $('.food-list').append('<li>' + food[i].name + '</li>')
+
+    $('.inventory-list').html('<ul></ul>');
+
+    var countedItems = getQuantities(items);
+
+    for (i = 0; i < countedItems.length; i++) {
+        if (!countedItems[i].used && countedItems[i].visible) {
+            switch (countedItems[i].type) {
+                case "Useable":
+                    $('.useables-list').append('<li>'
+                        + countedItems[i].occurence + 'x '
+                        + countedItems[i].name
+                        + '<div class="btn use-item" data-id="' + countedItems[i].id + '">Use</button>'
+                        + '</li>');
+                    break;
+                case "Weapon":
+                    $('.weapons-list').append('<li>' + countedItems[i].occurence + 'x ' + countedItems[i].name + '</li>');
+                    break;
+                case "Treasure":
+                    $('.treasures-list').append('<li>' + countedItems[i].occurence + 'x ' + countedItems[i].name + '</li>');
+                    break;
+                case "Food":
+                    $('.food-list').append('<li>' + countedItems[i].occurence + 'x '
+                        + countedItems[i].name
+                        + '<div class="btn eat-food" data-id="' + countedItems[i].id + '">Eat</button>'
+                       + '</li>');
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }
 
@@ -444,6 +504,14 @@ function invalidate(room) {
         $(this).remove();
     });
 
+    // darkness check
+    if (room.isDark) {
+        $('.map').addClass('dark');
+    }
+    else {
+        $('.map').removeClass('dark');
+    }
+
     for (var i = 0; i < room.items.length; i++) {
         var itemPos = room.items[i].pos;
         if (!room.items[i].taken) {
@@ -467,7 +535,17 @@ function invalidate(room) {
         }
 
     }
+
+    for (var i = 0; i < room.npcs.length; i++) {
+        var npcPos = room.npcs[i].pos;
+
+        $('*[data-position="' + npcPos + '"]').html('<div class="sprite npc" data-npc-id="' + room.npcs[i].id + '">' + room.npcs[0].image + '</div>');
+    }
     $('body').fadeIn(100);
+}
+
+function gameOver() {
+    document.write('<h1>GAME OVER NERD</h1>');
 }
 
 // HP Bar functions
@@ -484,28 +562,47 @@ function setHP(amt) {
     $("#hp-amount").html(amt);
 }
 
+function setMoney(newVal) {
+    var oldVal = parseInt($("#money-amount").html());
+    $({ val: oldVal }).animate({ val: newVal }, {
+        duration: 500,
+        easing: 'swing', // can be anything
+        step: function () { // called on every step
+            // Update the element's text with rounded-up value:
+            $("#money-amount").text(Math.round(this.val));
+        }
+    });
+}
+
+function setHunger(newVal) {
+    $("#hunger").html(newVal);
+}
+
 // start#
 
 
 var player = new Player(
-    20, 20, 3, 3, 2, 2, 0.1, 2, 2, 2, [], 0,
-    new Coordinates(0, 0)
+    20, 20, 3, 3, 2, 2, 0.1, 2, 2, 20, [], 0,
+    new Coordinates(0, 0), 20
 );
 
 var rooms = [];
 
 var gameState = new GameState(player, rooms, 1);
-setHP(player.HP);
+gameState.player = player;
+setHP(gameState.player.HP);
+setHunger(gameState.player.hunger);
 gameState.rooms.push(generateRoom(0, 0));
 
-var monstersRepository = {};
-$.getJSON('http://localhost:4400/scripts/test.json', function (json) {
-    monstersRepository = json;
-});
-
-
+setInterval(function () {
+    gameState.player.hunger -= 1;
+    if (gameState.player.hunger <= 0) gameOver();
+    setHunger(gameState.player.hunger);
+}, 15000);
 
 $(function () {
+
+
 
     //initialise
     invalidate(rooms[0]);
@@ -553,7 +650,7 @@ $(function () {
                         break;
                 }
                 invalidate(room);
-                gameConsole.log(gameState.player.position.output());
+                //     gameConsole.log(gameState.player.position.output());
                 return;
             }
             else if (gameState.player.hasKey()) {
@@ -575,12 +672,12 @@ $(function () {
                         break;
                 }
                 invalidate(room);
-                gameConsole.log(gameState.player.position.output());
+                //     gameConsole.log(gameState.player.position.output());
                 return;
             }
             else {
 
-                gameConsole.log(gameState.player.position.output());
+                //     gameConsole.log(gameState.player.position.output());
                 gameConsole.log('This room is locked...');
                 return;
             }
@@ -607,7 +704,7 @@ $(function () {
             }
 
             invalidate(newRoom);
-            gameConsole.log(gameState.player.position.output());
+            //      gameConsole.log(gameState.player.position.output());
             return;
         }
         else if (gameState.player.hasKey()) {
@@ -629,15 +726,15 @@ $(function () {
                     break;
             }
             invalidate(newRoom);
-            gameConsole.log(gameState.player.position.output());
+            //   gameConsole.log(gameState.player.position.output());
             return;
         }
         else {
             gameConsole.log('This room is locked...');
-            gameConsole.log(gameState.player.position.output());
+            //       gameConsole.log(gameState.player.position.output());
             return;
         }
-        gameConsole.log(gameState.player.position.output());
+        //      gameConsole.log(gameState.player.position.output());
 
     });
 
@@ -653,10 +750,25 @@ $(function () {
         renderInventory(gameState.player.items);
     });
 
+    $(document).on('click', '.npc', function () {
+        var room = gameState.getRoomById($('.map').attr('data-room-id'));
+        if (room.isDark) {
+            gameConsole.log('It\'s too dark to see anything...');
+            return;
+        }
+        var npc = room.getNpcById($(this).attr('data-npc-id'));
+        // populate monster modal
+        $('#npc-modal').modal('show');
+    });
+
 
     $(document).on('click', '.monster', function () {
 
         var room = gameState.getRoomById($('.map').attr('data-room-id'));
+        if (room.isDark) {
+            gameConsole.log('It\'s too dark to see anything...');
+            return;
+        }
         var monster = room.getMonsterById($(this).attr('data-monster-id'));
         // populate monster modal
         $('.monster-info-id').html(monster.id);
@@ -672,7 +784,20 @@ $(function () {
     $(document).on('click', '.item', function () {
 
         var room = gameState.getRoomById($('.map').attr('data-room-id'));
+        if (room.isDark) {
+            gameConsole.log('It\'s too dark to see anything...');
+            return;
+        }
         var item = room.getItemById($(this).attr('data-item-id'));
+
+        if (item.name == "Money Pot") {
+            gameConsole.log('You found $' + item.bonanza);
+            gameState.player.money += item.bonanza;
+            item.taken = true;
+            $(this).fadeOut(100);
+            return;
+        }
+
         item.taken = true;
         item.used = false;
         gameState.player.items.push(item);
@@ -680,5 +805,21 @@ $(function () {
         gameConsole.log('Took the ' + item.name);
 
     });
+
+    $(document).on('click', '.use-item', function () {
+        var item = gameState.player.getItemById($(this).attr('data-id'));
+        if (item.name == 'Torch') {
+            gameState.player.useTorch(item);
+        }
+        else {
+            gameState.player.useItem(item);
+        }
+    });
+
+    $(document).on('click', '.eat-food', function () {
+        var food = gameState.player.getItemById($(this).attr('data-id'));
+        gameState.player.eatFood(food);
+    });
+
 
 });
