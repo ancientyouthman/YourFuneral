@@ -104,6 +104,7 @@ function generateItem(gs) {
 }
 
 function generateItems(gs, amt) {
+
     var items = [];
     // this is for making an array of items, for example to set as a merchant's stock 
     for (var i = 0; i < amt; i++) {
@@ -121,7 +122,7 @@ function generateItems(gs, amt) {
 
             itemAlreadyAdded = $.grep(items, function (n, i) {
                 return (n.name == itemTemplate.name);
-            });
+            }).length != 0;
 
             if (!itemTemplate || itemAlreadyAdded) {
                 continue;
@@ -181,7 +182,7 @@ function generateNPC(gs) {
 
 
 
-
+ 
     return npc;
 
 
@@ -198,7 +199,7 @@ function generateRoom(x, y) {
     // roll for items
     var itemCount = getRandomArbitrary(0, 3);
     // roll for npc 
-    var npcCount = getRandomArbitrary(0, 8) == 5 ? getRandomArbitrary(1, 2) : 0;
+    var npcCount = getRandomArbitrary(0, 8) 5 == 5 ? getRandomArbitrary(1, 2) : 0;
 
     for (var i = 0; i < monsterCount; i++) {
         monsters.push(generateMonster(gameState));
@@ -434,6 +435,24 @@ function renderInventory(items) {
     }
 }
 
+function renderNpcModal(npc) {
+    debugger;
+    switch (npc.name) {
+        case "Merchant":
+            $('.merchant-buy-list').show();
+            var merchantHtml = "";
+            for (var i = 0; i < npc.items.length; i++) {
+                if (!npc.items[i].taken) {
+                    merchantHtml += '<div class="merchant-item">' + npc.items[i].name + ' $' + npc.items[i].price + '</div>';
+                    merchantHtml += '<div class="btn buy-item" data-npc-id="' + npc.id + '" data-item-id="' + npc.items[i].id + '">' + 'Buy' + '</div> <br />';
+                }
+                }
+            $('.merchant-buy-list').html(merchantHtml);
+            break;
+    }
+
+    }
+
 
 function renderMap(rooms) {
 
@@ -542,6 +561,21 @@ function invalidate(room) {
         $('*[data-position="' + npcPos + '"]').html('<div class="sprite npc" data-npc-id="' + room.npcs[i].id + '">' + room.npcs[0].image + '</div>');
     }
     $('body').fadeIn(100);
+}
+
+function buyItem(item) {
+    debugger;
+    if (item.price > gameState.player.money) {
+        $('.npc-message').html('You can\'t afford it!');
+        return;
+    }
+    else {
+        gameState.player.money -= item.price;
+        item.taken = true;
+        gameState.player.items.push(item);
+        setMoney(gameState.player.money);
+        $('.npc-message').html('You bought a ' + item.name);
+    }
 }
 
 function gameOver() {
@@ -757,8 +791,9 @@ $(function () {
             return;
         }
         var npc = room.getNpcById($(this).attr('data-npc-id'));
-        // populate monster modal
+        // populate npc modal
         $('#npc-modal').modal('show');
+        renderNpcModal(npc);
     });
 
 
@@ -821,5 +856,13 @@ $(function () {
         gameState.player.eatFood(food);
     });
 
+    $(document).on('click', '.buy-item', function () {
+        debugger;
+        var room = gameState.getRoomById($('.map').attr('data-room-id'));
+        var npc = room.getNpcById($(this).attr('data-npc-id'));
+        var item = npc.getItemById($(this).attr('data-item-id'));
+        buyItem(item);
+        renderNpcModal(npc);
+    });
 
 });

@@ -167,6 +167,16 @@ function Merchant(items, speciality, meanness) {
     this.items = items;
     this.speciality = speciality;
     this.meanness = meanness;
+    this.getItemById = function (id) {
+        for (i = 0; i < this.items.length; i++) {
+            if (this.items[i].id == id) {
+                if (!this.items[i].used) {
+                    return this.items[i];
+                }
+            }
+        }
+        return false;
+    };
 
 }
 
