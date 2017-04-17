@@ -40,7 +40,7 @@ html{
 }
 
 .wrapper{
-	height:400px;
+	height:300px;
 	width:100%;
 	margin-left:auto;
 	margin-right:auto;
@@ -81,6 +81,10 @@ html{
 
 .floor{
 	background-image:url('../img/floor.png');
+}
+
+input{
+    color: black !important;
 }
 
 .map-modal-content br{

@@ -31,7 +31,13 @@ function Coordinates(x, y, toOutput) {
     }
 }
 
-function Player(HP, maxHP, level, atk, def, speed, critChance, luck, agile, hunger, items, money, position, maxHunger) {
+function Curse(modifiers, name) {
+    GameObject.apply(this, arguments);
+    this.modifiers = modifiers;
+    this.name = name;
+}
+
+function Player(HP, maxHP, level, atk, def, speed, critChance, luck, agile, hunger, items, money, position, maxHunger, xp, curses) {
     this.HP = HP;
     this.maxHP = maxHP;
     this.level = level;
@@ -46,6 +52,8 @@ function Player(HP, maxHP, level, atk, def, speed, critChance, luck, agile, hung
     this.items = items;
     this.money = money;
     this.position = position;
+    this.xp = xp;
+    this.curses = curses;
     this.hasKey = function () {
         for (i = 0; i < this.items.length; i++) {
             if (this.items[i].name == 'Key') {
@@ -69,6 +77,10 @@ function Player(HP, maxHP, level, atk, def, speed, critChance, luck, agile, hung
     this.useTorch = function (torch) {
         torch.used = true;
         var room = gameState.findRoomAtCoords(this.position.x, this.position.y);
+        if (!room.isDark) {
+            gameConsole.log('No need to use this here!');
+            return;
+        }
         room.isDark = false;
         console.log(room);
         renderInventory(this.items);
@@ -88,9 +100,20 @@ function Player(HP, maxHP, level, atk, def, speed, critChance, luck, agile, hung
     this.useItem = function (item) {
         for (var i = 0; i < item.modifiers.length; i++) {
             if (item.modifiers[i].stat == 'HP') {
-                this.HP += Math.ceil(this.maxHP * item.modifiers[i].amountPercentage);
-                if (this.HP > this.maxHP) this.HP = this.maxHP;
-                setHP(gameState.player.HP);
+                if (item.modifiers[i].amountPercentage) {
+                    this.HP += Math.ceil(this.maxHP * item.modifiers[i].amountPercentage);
+                    if (this.HP > this.maxHP) this.HP = this.maxHP;
+                    setHP(gameState.player.HP);
+                }
+                else if (item.modifiers[i].amountFixed) {
+                    this.HP +=  item.modifiers[i].amountFixed;
+                    if (this.HP > this.maxHP) this.HP = this.maxHP;
+                    setHP(gameState.player.HP);
+                }
+            }
+            else {
+                //debugger;
+                this[item.modifiers[i].stat] += Math.ceil(this.maxHP * item.modifiers[i].amountPercentage);
             }
         }
         item.used = true;
@@ -113,6 +136,19 @@ function Player(HP, maxHP, level, atk, def, speed, critChance, luck, agile, hung
         food.used = true;
         renderInventory(this.items);
     };
+    this.equipItem = function (item) {
+        for (var i = 0; i < item.modifiers.length; i++) {
+            if (item.equipped) {
+                this[item.modifiers[i].stat] -= item.modifiers[i].amountFixed;
+
+            }
+            else {
+                this[item.modifiers[i].stat] += item.modifiers[i].amountFixed;
+
+            }
+            item.equipped = !item.equipped;
+        }
+    }
 }
 
 function Room(roomId, xPos, yPos, items, monsters, npcs, isLocked, isDark) {
@@ -141,7 +177,7 @@ function Room(roomId, xPos, yPos, items, monsters, npcs, isLocked, isDark) {
     };
 }
 
-function Item(pos, name, value, image, type, taken, used, curses, price) {
+function Item(pos, name, value, image, type, taken, used, curses, price, description) {
     GameObject.apply(this, arguments);
     this.pos = pos;
     this.name = name;
@@ -152,9 +188,10 @@ function Item(pos, name, value, image, type, taken, used, curses, price) {
     this.used = used;
     this.curses = curses;
     this.price = price;
+    this.description = description;
 }
 
-function NPC (pos, name, type, image) {
+function NPC(pos, name, type, image) {
     GameObject.apply(this, arguments);
     this.pos = pos;
     this.name = name;
@@ -193,6 +230,15 @@ function Trap(damage) {
 function UseableItem(modifiers) {
     Item.apply(this, arguments);
     this.modifiers = modifiers;
+}
+
+function Equipment(modifiers, equipmentType, equipped, robustness, damage, weight) {
+    this.modifiers = modifiers;
+    this.equipmentType = equipmentType;
+    this.equipped = equipped;
+    this.robustness = robustness;
+    this.damage = damage;
+    this.weight = weight;
 }
 
 function Food(perishable, rotten, nutrition, modifiers) {
